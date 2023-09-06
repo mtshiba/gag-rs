@@ -58,7 +58,7 @@ struct RedirectFds {
 
 impl RedirectFds {
     fn make<F: AsRawFileDescriptor>(file: &F, stdio: StdioDescriptor) -> io::Result<RedirectFds> {
-        if REDIRECT_FLAGS[stdio as usize].fetch_or(true, Ordering::Relaxed) {
+        if REDIRECT_FLAGS[stdio as usize].fetch_or(true, Ordering::SeqCst) {
             return Err(io::Error::new(
                 io::ErrorKind::AlreadyExists,
                 "Redirect already exists.",
@@ -76,7 +76,7 @@ impl RedirectFds {
 impl Drop for RedirectFds {
     fn drop(&mut self) {
         let _ = FileDescriptor::redirect_stdio(&self.std_fd, self.stdio);
-        REDIRECT_FLAGS[self.stdio as usize].store(false, Ordering::Relaxed);
+        REDIRECT_FLAGS[self.stdio as usize].store(false, Ordering::SeqCst);
     }
 }
 
